@@ -35,8 +35,10 @@ class TicTacToeWinConditionChecker(WinConditionCheckerProtocol):
                         f'Winning symbol {basis} in cell group {groups} has no associated player'
 
                     return winner
-
         return None
+    
+    def update_field(self, field: Field) -> None:
+        self._field = field
 
 class TicTacToeSymbolManager(SymbolManagerProtocol):
     def __init__(self, player_symbols: dict[PlayerId, Symbol]):

@@ -28,9 +28,10 @@ def make_model(args: argparse.Namespace):
         case "tictactoe":
             field = Field(args.size)
             player_symbols = {i + 1: symbol for i, symbol in enumerate(args.symbols)}
-            win_condition_checker = TicTacToeWinConditionChecker(field, player_symbols)
+            symbols_player = {symbol: i + 1 for i, symbol in enumerate(args.symbols)}
+            win_condition_checker = TicTacToeWinConditionChecker(field, symbols_player)
             symbol_manager = TicTacToeSymbolManager(player_symbols)
-            
+
             return GridGameModel(
                 grid_size=args.size,
                 player_count=args.player_count,

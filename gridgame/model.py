@@ -24,18 +24,8 @@ class GridGameModel:
                 f'Player symbols must be exactly {player_count} (was {player_symbols})')
 
         self._field = Field(grid_size)
-
         self._player_count = player_count
-        self._player_to_symbol: dict[PlayerId, Symbol] = {
-            k: symbol
-            for k, symbol in enumerate(player_symbols, start=1)
-        }
-        self._symbol_to_player: dict[Symbol, PlayerId] = {
-            symbol: k
-            for k, symbol in self._player_to_symbol.items()
-        }
         self._current_player: PlayerId = 1
-
         self._win_condition_checker = win_condition_checker
         self._symbol_manager = symbol_manager
 
@@ -77,7 +67,6 @@ class GridGameModel:
         return self._symbol_manager.get_symbol_choices(player)
 
     def place_symbol(self, symbol: Symbol, cell: Cell) -> Feedback:
-        print(self._field._grid)
         if self.is_game_over:
             return Feedback.GAME_OVER
 
@@ -91,8 +80,9 @@ class GridGameModel:
             return Feedback.OCCUPIED
 
         self._field.place_symbol(symbol, cell)
+
+        self._win_condition_checker.update_field(self._field)
         
-        # Check for a winner after placing the symbol
         if self.winner is not None:
             return Feedback.VALID
 

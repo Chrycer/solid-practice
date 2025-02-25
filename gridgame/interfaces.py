@@ -7,6 +7,9 @@ class WinConditionCheckerProtocol(Protocol):
 
     def check_winner(self) -> PlayerId | None:
         ...
+    
+    def update_field(self, field: Field) -> None:
+        ...
 
 class SymbolManagerProtocol(Protocol):
     def __init__(self, player_symbols: dict[PlayerId, Symbol]):
@@ -14,3 +17,4 @@ class SymbolManagerProtocol(Protocol):
 
     def get_symbol_choices(self, player: PlayerId) -> list[Symbol]:
         ...
+    
