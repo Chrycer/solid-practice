@@ -1,9 +1,10 @@
 import argparse
 
 from gridgame.model import GridGameModel
+from gridgame.tictactoe import TicTacToeWinConditionChecker, TicTacToeSymbolManager
 from gridgame.view import View
 from gridgame.controller import Controller
-
+from gridgame.project_types import Field
 
 def str_list(line: str) -> list[str]:
     return line.split(',')
@@ -22,14 +23,20 @@ def setup_parser():
 
     return parser
 
-
 def make_model(args: argparse.Namespace):
     match args.variant:
         case "tictactoe":
+            field = Field(args.size)
+            player_symbols = {i + 1: symbol for i, symbol in enumerate(args.symbols)}
+            win_condition_checker = TicTacToeWinConditionChecker(field, player_symbols)
+            symbol_manager = TicTacToeSymbolManager(player_symbols)
+            
             return GridGameModel(
                 grid_size=args.size,
                 player_count=args.player_count,
                 player_symbols=args.symbols,
+                win_condition_checker=win_condition_checker,
+                symbol_manager=symbol_manager
             )
 
         case "wild":
@@ -44,7 +51,6 @@ def make_model(args: argparse.Namespace):
         case _:
             raise NotImplementedError(f'Variant "{args.variant}" is unknown')
 
-
 def main():
     parser = setup_parser()
     args = parser.parse_args()
@@ -54,7 +60,6 @@ def main():
     controller = Controller(model, view)
 
     controller.start_game()
-
 
 if __name__ == '__main__':
     main()

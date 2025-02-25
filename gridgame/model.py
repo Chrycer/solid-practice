@@ -1,10 +1,14 @@
+# pyright : strict
+
 from collections.abc import Sequence
+from typing import Protocol
 
 from .project_types import PlayerId, Cell, Symbol, Feedback, Field
-
+from .interfaces import WinConditionCheckerProtocol, SymbolManagerProtocol
 
 class GridGameModel:
-    def __init__(self, grid_size: int, player_symbols: Sequence[Symbol], player_count: int):
+    def __init__(self, grid_size: int, player_symbols: Sequence[Symbol], player_count: int, 
+                 win_condition_checker: WinConditionCheckerProtocol, symbol_manager: SymbolManagerProtocol):
         if player_count <= 1:
             raise ValueError(
                 f'Must have at least two players (found {player_count})')
@@ -31,6 +35,9 @@ class GridGameModel:
             for k, symbol in self._player_to_symbol.items()
         }
         self._current_player: PlayerId = 1
+
+        self._win_condition_checker = win_condition_checker
+        self._symbol_manager = symbol_manager
 
     @property
     def occupied_cells(self) -> dict[Cell, Symbol]:
@@ -64,43 +71,13 @@ class GridGameModel:
 
     @property
     def winner(self) -> PlayerId | None:
-        row_groups = [
-            [Cell(row, k) for k in self._field.valid_coords]
-            for row in self._field.valid_coords
-        ]
-
-        col_groups = [
-            [Cell(k, col) for k in self._field.valid_coords]
-            for col in self._field.valid_coords
-        ]
-
-        diagonals = [
-            # Backslash
-            [Cell(k, k) for k in self._field.valid_coords],
-            # Forward slash
-            [Cell(k, self._field.grid_size - k + 1)
-             for k in self._field.valid_coords],
-        ]
-
-        for groups in [row_groups, col_groups, diagonals]:
-            for group in groups:
-                if (basis := self._field.get_symbol_at(group[0])) is not None and \
-                        self._field.are_all_equal_to_basis(basis, group):
-                    winner = self._symbol_to_player.get(basis)
-                    assert winner is not None, \
-                        f'Winning symbol {basis} in cell group {groups} has no associated player'
-
-                    return winner
-
-        return None
+        return self._win_condition_checker.check_winner()
 
     def get_symbol_choices(self, player: PlayerId) -> list[Symbol]:
-        if player not in self._player_to_symbol:
-            raise ValueError(f'Invalid player: {player}')
-
-        return [self._player_to_symbol[player]]
+        return self._symbol_manager.get_symbol_choices(player)
 
     def place_symbol(self, symbol: Symbol, cell: Cell) -> Feedback:
+        print(self._field._grid)
         if self.is_game_over:
             return Feedback.GAME_OVER
 
@@ -114,6 +91,11 @@ class GridGameModel:
             return Feedback.OCCUPIED
 
         self._field.place_symbol(symbol, cell)
+        
+        # Check for a winner after placing the symbol
+        if self.winner is not None:
+            return Feedback.VALID
+
         self._switch_to_next_player()
 
         return Feedback.VALID

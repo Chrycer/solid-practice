@@ -29,6 +29,8 @@ class Controller:
 
                 match model.place_symbol(symbol, cell):
                     case Feedback.VALID:
+                        if model.is_game_over:
+                            break
                         break
 
                     case Feedback.OUT_OF_BOUNDS:
