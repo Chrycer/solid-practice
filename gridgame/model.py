@@ -5,10 +5,11 @@ from typing import Protocol
 
 from .project_types import PlayerId, Cell, Symbol, Feedback, Field
 from .interfaces import WinConditionCheckerProtocol, SymbolManagerProtocol
+from gridgame.tictactoe import TicTacToeSymbolManager, TicTacToeWinConditionChecker
 
 class GridGameModel:
     def __init__(self, grid_size: int, player_symbols: Sequence[Symbol], player_count: int, 
-                 win_condition_checker: WinConditionCheckerProtocol, symbol_manager: SymbolManagerProtocol):
+                 win_condition_checker: WinConditionCheckerProtocol = TicTacToeWinConditionChecker, symbol_manager: SymbolManagerProtocol = TicTacToeSymbolManager):
         if player_count <= 1:
             raise ValueError(
                 f'Must have at least two players (found {player_count})')
@@ -22,12 +23,15 @@ class GridGameModel:
         if len(player_symbols) != player_count:
             raise ValueError(
                 f'Player symbols must be exactly {player_count} (was {player_symbols})')
+        
+        self._player_symbols = {i + 1: symbol for i, symbol in enumerate(player_symbols)}
+        self._symbols_player = {symbol: i + 1 for i, symbol in enumerate(player_symbols)}
 
         self._field = Field(grid_size)
         self._player_count = player_count
         self._current_player: PlayerId = 1
-        self._win_condition_checker = win_condition_checker
-        self._symbol_manager = symbol_manager
+        self._win_condition_checker = win_condition_checker(self._field, self._symbols_player)
+        self._symbol_manager = symbol_manager(self._player_symbols)
 
     @property
     def occupied_cells(self) -> dict[Cell, Symbol]:
